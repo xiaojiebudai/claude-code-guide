@@ -1,0 +1,34 @@
+# Claude Code 使用技巧与命令指南
+
+![Claude Code 使用指南截图](screenshot.png)
+
+**一个交互式 HTML 演示文稿，涵盖 Claude Code 的完整使用指南。**
+
+## 内容
+
+| 页码 | 主题 |
+|------|------|
+| 1 | Claude Code 简介 — 6 大核心能力 |
+| 2 | 基础命令速查表 — 10 个常用命令 |
+| 3 | Skills 技能系统 — 安装与推荐 |
+| 4 | Plugins 插件系统 — Superpowers / ECC / claude-mem |
+| 5 | Hooks 自动触发器 — 5 种钩子类型 |
+| 6 | 记忆系统 — CLAUDE.md / MEMORY.md / .learnings / claude-mem |
+| 7 | 使用技巧（一）— 对话效率 |
+| 8 | 使用技巧（二）— 项目配置 |
+| 9 | 使用技巧（三）— 高级玩法 |
+| 10 | 配置管理 — settings.json 详解 |
+| 11 | 键盘快捷键 |
+| 12 | 推荐工作流 — 5 步开发流程 |
+| 13 | 总结与快速上手 |
+
+## 访问
+
+**https://xiaojiebudai.github.io/claude-code-guide/**
+
+## 操作
+
+- `← →` 键盘翻页
+- `Home / End` 跳首尾
+- 鼠标滚轮翻页
+- 触摸屏滑动翻页
