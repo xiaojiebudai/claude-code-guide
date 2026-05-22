@@ -1,4 +1,6 @@
-# Exclude everything except the presentation
+# Exclude everything except the presentation and readme
 *
 !.gitignore
-!Claude-Code使用指南.html
+!index.html
+!README.md
+!screenshot.png
