@@ -37,10 +37,24 @@
   }
 
   /* Slide container */
+  /* Top navigation */
+  .top-nav {
+    position: fixed; top: 0; left: 0; right: 0; height: 44px;
+    display: flex; align-items: center; justify-content: center; gap: 0;
+    background: rgba(15,15,20,0.95); backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border); z-index: 200;
+  }
+  .top-nav a {
+    padding: 10px 28px; color: var(--text-secondary); text-decoration: none;
+    font-size: 0.88rem; border-bottom: 2px solid transparent;
+    transition: all 0.2s; font-weight: 500;
+  }
+  .top-nav a:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+  .top-nav a.active { color: var(--accent); border-bottom-color: var(--accent); }
+
   .presentation {
-    width: 100vw;
-    height: 100vh;
-    position: relative;
+    width: 100vw; height: calc(100vh - 44px);
+    position: relative; margin-top: 44px;
   }
 
   .slide {
@@ -346,6 +360,12 @@
 </style>
 </head>
 <body>
+
+<!-- Top Navigation -->
+<nav class="top-nav">
+  <a href="index.html" class="active">使用技巧与命令指南</a>
+  <a href="install-guide.html">安装与 DeepSeek 接入</a>
+</nav>
 
 <div class="presentation" id="presentation">
 

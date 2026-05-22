@@ -44,7 +44,7 @@
 ## 访问
 
 - **[使用技巧与命令指南](https://xiaojiebudai.github.io/claude-code-guide/)**
-- **[安装与 DeepSeek 接入指南](https://xiaojiebudai.github.io/claude-code-guide/Claude-Code安装与DeepSeek接入指南.html)**
+- **[安装与 DeepSeek 接入指南](https://xiaojiebudai.github.io/claude-code-guide/install-guide.html)**
 
 ## 操作
 
