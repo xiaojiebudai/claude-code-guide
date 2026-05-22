@@ -1,0 +1,4 @@
+# Exclude everything except the presentation
+*
+!.gitignore
+!Claude-Code使用指南.html

@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Code 使用技巧与命令指南</title>
+<style>
+  :root {
+    --bg: #0f0f14;
+    --surface: #1a1a24;
+    --border: #2a2a3a;
+    --text: #e0e0e0;
+    --text-secondary: #9090aa;
+    --accent: #7c5cfc;
+    --accent-glow: rgba(124,92,252,0.35);
+    --green: #4ade80;
+    --yellow: #fbbf24;
+    --red: #f87171;
+    --blue: #60a5fa;
+    --orange: #fb923c;
+    --pink: #f472b6;
+    --code-bg: #16161e;
+    --gradient-1: linear-gradient(135deg, #7c5cfc 0%, #a78bfa 100%);
+    --gradient-2: linear-gradient(135deg, #f472b6 0%, #fb923c 100%);
+    --gradient-3: linear-gradient(135deg, #60a5fa 0%, #34d399 100%);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow: hidden;
+    height: 100vh;
+    user-select: none;
+  }
+
+  /* Slide container */
+  .presentation {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+  }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transform: translateX(60px);
+    transition: all 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+    padding: 60px 80px;
+  }
+
+  .slide.active {
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: auto;
+  }
+
+  .slide.prev {
+    opacity: 0;
+    transform: translateX(-60px);
+  }
+
+  .slide-content {
+    max-width: 960px;
+    width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+
+  /* Title slide */
+  .title-slide { text-align: center; }
+
+  .title-slide h1 {
+    font-size: 3.2rem;
+    font-weight: 700;
+    background: var(--gradient-1);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 20px;
+    line-height: 1.3;
+  }
+
+  .title-slide .subtitle {
+    font-size: 1.3rem;
+    color: var(--text-secondary);
+    margin-bottom: 40px;
+  }
+
+  .title-slide .badge {
+    display: inline-block;
+    padding: 8px 24px;
+    border: 1px solid var(--border);
+    border-radius: 50px;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+  }
+
+  /* Section headers */
+  h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: var(--text);
+  }
+
+  h2 .icon { margin-right: 10px; }
+
+  .section-subtitle {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    margin-bottom: 36px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  h3 {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 10px;
+  }
+
+  /* Cards */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    transition: border-color 0.2s;
+  }
+
+  .card:hover { border-color: var(--accent); }
+
+  .card .card-title {
+    font-weight: 600;
+    font-size: 1rem;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card .card-title .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+  }
+
+  .card p {
+    color: var(--text-secondary);
+    font-size: 0.88rem;
+    line-height: 1.6;
+  }
+
+  .dot.purple { background: var(--accent); }
+  .dot.green { background: var(--green); }
+  .dot.yellow { background: var(--yellow); }
+  .dot.blue { background: var(--blue); }
+  .dot.orange { background: var(--orange); }
+  .dot.pink { background: var(--pink); }
+  .dot.red { background: var(--red); }
+
+  /* Code blocks */
+  .code-block {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 22px;
+    margin: 12px 0 20px;
+    font-family: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+    font-size: 0.88rem;
+    line-height: 1.7;
+    overflow-x: auto;
+    white-space: pre;
+  }
+
+  .code-block .cmd { color: var(--green); }
+  .code-block .arg { color: var(--yellow); }
+  .code-block .comment { color: #6b6b80; }
+  .code-block .path { color: var(--blue); }
+
+  /* Tip boxes */
+  .tip-box {
+    border-left: 3px solid var(--accent);
+    background: rgba(124,92,252,0.08);
+    padding: 16px 20px;
+    border-radius: 0 8px 8px 0;
+    margin: 16px 0;
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+
+  .tip-box strong { color: var(--accent); }
+
+  /* Table */
+  .cmd-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+  }
+
+  .cmd-table th {
+    text-align: left;
+    padding: 10px 16px;
+    border-bottom: 2px solid var(--border);
+    color: var(--text-secondary);
+    font-weight: 500;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .cmd-table td {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+
+  .cmd-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .cmd-table code {
+    background: var(--code-bg);
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.85rem;
+    color: var(--green);
+    white-space: nowrap;
+  }
+
+  /* Navigation */
+  .nav-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    background: rgba(15,15,20,0.9);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid var(--border);
+    z-index: 100;
+  }
+
+  .nav-bar button {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+  }
+
+  .nav-bar button:hover {
+    border-color: var(--accent);
+    background: #1e1e2c;
+  }
+
+  .nav-bar .page-indicator {
+    color: var(--text-secondary);
+    font-size: 0.82rem;
+    min-width: 60px;
+    text-align: center;
+  }
+
+  .nav-bar .progress {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 2px;
+    background: var(--accent);
+    transition: width 0.4s ease;
+  }
+
+  /* Bullet list */
+  .bullet-list {
+    list-style: none;
+    padding: 0;
+  }
+
+  .bullet-list li {
+    padding: 8px 0 8px 24px;
+    position: relative;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    font-size: 0.92rem;
+  }
+
+  .bullet-list li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 15px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  .bullet-list li strong { color: var(--text); }
+
+  /* Two column */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  @media (max-width: 768px) {
+    .two-col { grid-template-columns: 1fr; }
+    .slide { padding: 30px 24px; }
+    .title-slide h1 { font-size: 2rem; }
+  }
+
+  /* Keyboard key */
+  kbd {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2px 7px;
+    font-family: 'Cascadia Code', 'Fira Code', monospace;
+    font-size: 0.82rem;
+  }
+</style>
+</head>
+<body>
+
+<div class="presentation" id="presentation">
+
+  <!-- Slide 0: Title -->
+  <div class="slide active" data-index="0">
+    <div class="slide-content title-slide">
+      <h1>Claude Code<br>使用技巧与命令指南</h1>
+      <p class="subtitle">高效使用 AI 编程助手的完整参考手册</p>
+      <span class="badge">2026年5月 · 中文版</span>
+    </div>
+  </div>
+
+  <!-- Slide 1: Overview -->
+  <div class="slide" data-index="1">
+    <div class="slide-content">
+      <h2>Claude Code 是什么？</h2>
+      <p class="section-subtitle">Anthropic 官方出品的 AI 编程助手 CLI 工具</p>
+
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-title"><span class="dot purple"></span>终端原生</div>
+          <p>在终端中直接与 Claude 交互，无需离开命令行环境。支持 Bash、Zsh、PowerShell。</p>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="dot green"></span>文件操作</div>
+          <p>读写文件、搜索代码、批量编辑、Git 操作等，所有工具调用均需授权。</p>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="dot blue"></span>技能系统</div>
+          <p>通过 Skills 扩展专业领域能力，支持全局安装和项目级安装。</p>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="dot orange"></span>插件生态</div>
+          <p>丰富的 Plugin Marketplace，一键安装社区贡献的插件和技能包。</p>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="dot pink"></span>Hooks 自动化</div>
+          <p>通过生命钩子（SessionStart、PostToolUse 等）自动触发行为。</p>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="dot yellow"></span>跨会话记忆</div>
+          <p>MEMORY.md + 技能系统实现持久的项目知识积累。</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>提示：</strong>Claude Code 最强大的地方在于它不仅仅是代码补全——它能理解整个项目、执行多步骤任务、并持续学习你的偏好。
+      </div>
+    </div>
+  </div>
+
+  <!-- Slide 2: Basic Commands -->
+  <div class="slide" data-index="2">
+    <div class="slide-content">
+      <h2>基础命令速查</h2>
+      <p class="section-subtitle">日常使用频率最高的命令</p>
+
+      <table class="cmd-table">
+        <tr><th>命令</th><th>功能</th><th>使用场景</th></tr>
+        <tr>
+          <td><code>/help</code></td>
+          <td>显示帮助信息</td>
+          <td>查看所有可用命令和功能说明</td>
+        </tr>
+        <tr>
+          <td><code>/clear</code></td>
+          <td>清空对话上下文</td>
+          <td>开始全新任务，释放上下文窗口</td>
+        </tr>
+        <tr>
+          <td><code>/compact</code></td>
+          <td>压缩对话历史</td>
+          <td>上下文接近上限时，自动压缩保留关键信息</td>
+        </tr>
+        <tr>
+          <td><code>/config</code></td>
+          <td>打开配置面板</td>
+          <td>修改主题、模型、权限等设置</td>
+        </tr>
+        <tr>
+          <td><code>/init</code></td>
+          <td>初始化项目 CLAUDE.md</td>
+          <td>为新项目生成 AI 上下文配置文件</td>
+        </tr>
+        <tr>
+          <td><code>/status</code></td>
+          <td>查看当前会话状态</td>
+          <td>了解上下文使用情况、已加载技能</td>
+        </tr>
+        <tr>
+          <td><code>/stats</code></td>
+          <td>查看使用统计</td>
+          <td>了解 Token 消耗和会话数据</td>
+        </tr>
+        <tr>
+          <td><code>/plan</code></td>
+          <td>进入计划模式</td>
+          <td>复杂任务先做方案设计，确认后再执行</td>
+        </tr>
+        <tr>
+          <td><code>/review</code></td>
+          <td>代码审查</td>
+          <td>审查当前分支的改动</td>
+        </tr>
+        <tr>
+          <td><code>/security-review</code></td>
+          <td>安全审查</td>
+          <td>检查待提交代码的安全隐患</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- Slide 3: Skills -->
+  <div class="slide" data-index="3">
+    <div class="slide-content">
+      <h2>技能（Skills）系统</h2>
+      <p class="section-subtitle">扩展 Claude Code 专业能力的核心机制</p>
+
+      <h3>技能是什么？</h3>
+      <p style="color: var(--text-secondary); margin-bottom: 20px; line-height: 1.7;">
+        技能是包含专业知识的 Markdown 文件（<code>SKILL.md</code>），通过 YAML 前置元数据定义名称和触发条件。Claude Code 在需要时会自动加载匹配的技能。
+      </p>
+
+      <div class="two-col">
+        <div>
+          <h3>安装技能</h3>
+          <div class="code-block"><span class="comment"># 全局安装（所有项目可用）</span>
+<span class="cmd">npx skills add</span> <span class="arg">vercel-labs/skills --skill find-skills -g -y</span>
+
+<span class="comment"># 项目级安装</span>
+<span class="cmd">npx skills add</span> <span class="arg">anthropics/skills --skill skill-creator -y</span>
+
+<span class="comment"># 搜索技能</span>
+<span class="cmd">npx skills find</span> <span class="arg">"browser"</span>
+
+<span class="comment"># 列出已安装</span>
+<span class="cmd">npx skills ls -g</span></div>
+        </div>
+        <div>
+          <h3>推荐技能包</h3>
+          <ul class="bullet-list">
+            <li><strong>find-skills</strong> — 搜索/发现新技能</li>
+            <li><strong>skill-creator</strong> — 创建自定义技能</li>
+            <li><strong>agent-browser</strong> — 浏览器自动化</li>
+            <li><strong>UI/UX Pro Max</strong> — 专业 UI 设计指导</li>
+            <li><strong>self-improving-agent</strong> — 跨会话学习</li>
+            <li><strong>superpowers</strong> — TDD + 调试 + 代码审查</li>
+            <li><strong>claude-mem</strong> — 持久化记忆系统</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Slide 4: Plugins -->
+  <div class="slide" data-index="4">
+    <div class="slide-content">
+      <h2>插件（Plugins）系统</h2>
+      <p class="section-subtitle">比 Skills 更强大的扩展机制，包含 Agents、Hooks、Commands</p>
+
+      <div class="code-block"><span class="comment"># 添加插件市场</span>
+<span class="cmd">/plugin marketplace add</span> <span class="arg">affaan-m/everything-claude-code</span>
+
+<span class="comment"># 从官方市场安装</span>
+<span class="cmd">/plugin install</span> <span class="arg">superpowers@claude-plugins-official</span>
+
+<span class="comment"># 列出已安装插件</span>
+<span class="cmd">/plugin list</span>
+
+<span class="comment"># 更新插件</span>
+<span class="cmd">/plugin update</span> <span class="arg">ecc@ecc</span></div>
+
+      <div class="card-grid" style="margin-top: 20px;">
+        <div class="card">
+          <div class="card-title"><span class="dot purple"></span>Superpowers</div>
+          <p>20+ 技能：brainstorming、TDD、debugging、code-review、git-worktrees 等。遵循"先设计再执行"的工程纪律。</p>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="dot blue"></span>ECC</div>
+          <p>Everything Claude Code：47 Agents + 232 Skills + 79 Commands，完整的开发工作流套件。</p>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="dot green"></span>claude-mem</div>
+          <p>跨会话持久记忆：SQLite + 向量嵌入 + 自动压缩，让 Claude 记住所有项目上下文。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Slide 5: Hooks -->
+  <div class="slide" data-index="5">
+    <div class="slide-content">
+      <h2>Hooks 自动触发器</h2>
+      <p class="section-subtitle">在特定事件发生时自动执行脚本或命令</p>
+
+      <h3>可用钩子类型</h3>
+      <table class="cmd-table" style="margin-bottom: 24px;">
+        <tr><th>钩子</th><th>触发时机</th><th>典型用途</th></tr>
+        <tr><td><code>SessionStart</code></td><td>会话开始时</td><td>加载项目上下文、初始化环境</td></tr>
+        <tr><td><code>UserPromptSubmit</code></td><td>用户提交消息后</td><td>注入提醒、检查规则</td></tr>
+        <tr><td><code>PreToolUse</code></td><td>工具调用前</td><td>权限检查、参数校验</td></tr>
+        <tr><td><code>PostToolUse</code></td><td>工具调用后</td><td>错误检测、日志记录</td></tr>
+        <tr><td><code>Stop</code></td><td>会话结束时</td><td>保存状态、清理资源</td></tr>
+      </table>
+
+      <h3>配置示例 (~/.claude/settings.json)</h3>
+      <div class="code-block">{
+  <span class="arg">"hooks"</span>: {
+    <span class="arg">"UserPromptSubmit"</span>: [{
+      <span class="arg">"matcher"</span>: <span class="green">""</span>,
+      <span class="arg">"hooks"</span>: [{
+        <span class="arg">"type"</span>: <span class="green">"command"</span>,
+        <span class="arg">"command"</span>: <span class="green">"bash ~/.claude/skills/self-improving-agent/scripts/activator.sh"</span>
+      }]
+    }]
+  }
+}</div>
+    </div>
+  </div>
+
+  <!-- Slide 6: Memory -->
+  <div class="slide" data-index="6">
+    <div class="slide-content">
+      <h2>记忆系统</h2>
+      <p class="section-subtitle">让 Claude 在多次对话中持续积累项目知识</p>
+
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-title"><span class="dot purple"></span>CLAUDE.md</div>
+          <p>项目根目录的 AI 上下文文件。记录项目架构、技术栈、编码规范、常见陷阱。每次会话自动加载。</p>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="dot green"></span>MEMORY.md</div>
+          <p>用户级持久记忆索引。存储跨项目的偏好、反馈、角色信息。位于 <code>~/.claude/projects/</code>。</p>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="dot blue"></span>.learnings/</div>
+          <p>Self-improving Agent 的错误日志和学习记录。包含 LEARNINGS.md、ERRORS.md、FEATURE_REQUESTS.md。</p>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="dot orange"></span>claude-mem</div>
+          <p>全自动插件级记忆：SQLite 数据库 + Chroma 向量搜索 + 观察压缩，无需手动维护。</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>最佳实践：</strong>在 CLAUDE.md 中记录"非显而易见"的信息——项目特有的约定、已知陷阱、构建系统的特殊配置。这些是 AI 无法从代码中推断的。
+      </div>
+    </div>
+  </div>
+
+  <!-- Slide 7: Tips 1 -->
+  <div class="slide" data-index="7">
+    <div class="slide-content">
+      <h2>使用技巧（一）—— 对话效率</h2>
+      <p class="section-subtitle">如何让 Claude Code 更高效地理解你的意图</p>
+
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-title"><span class="dot green"></span>具体胜过模糊</div>
+          <p>"把 src/utils/auth.ts 中的 login 函数改成 async/await 风格" 比 "改进认证模块" 效果好 10 倍。</p>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="dot blue"></span>提供上下文</div>
+          <p>告诉 Claude 你的技术栈、项目阶段、约束条件。使用 <code>/init</code> 初始化 CLAUDE.md 是好的起点。</p>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="dot purple"></span>善用 @ 引用</div>
+          <p>在对话中使用 <code>@file.ts</code> 引用文件，<code>@folder/</code> 引用目录，让 Claude 精确理解上下文。</p>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="dot orange"></span>分阶段执行</div>
+          <p>复杂任务先用 <code>/plan</code> 做方案，确认后再实施。避免一次请求做太多事情。</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>黄金法则：</strong>想象你在给一个新入职的同事分配任务——提供足够的背景信息、明确期望的输出格式、说清楚哪些不要做。
+      </div>
+    </div>
+  </div>
+
+  <!-- Slide 8: Tips 2 -->
+  <div class="slide" data-index="8">
+    <div class="slide-content">
+      <h2>使用技巧（二）—— 项目配置</h2>
+      <p class="section-subtitle">通过 CLAUDE.md 和 settings.json 定制 Claude 的行为</p>
+
+      <h3>CLAUDE.md 结构建议</h3>
+      <div class="code-block"><span class="comment"># 项目名称</span>
+<span class="comment">## 技术栈</span>
+- 前端：React 18 + TypeScript + Tailwind CSS
+- 后端：Node.js + Express + PostgreSQL
+
+<span class="comment">## 编码规范</span>
+- 使用函数组件，避免 class 组件
+- API 路由放在 src/routes/ 目录下
+- 数据库迁移使用 knex
+
+<span class="comment">## 注意事项</span>
+- 不要直接修改 dist/ 目录（构建产物）
+- 测试必须覆盖所有 API 端点</div>
+
+      <div class="tip-box">
+        <strong>提示：</strong>CLAUDE.md 文件越小越好——只记录代码中无法直接推断的信息。超过 200 行建议拆分到多个文件中。
+      </div>
+    </div>
+  </div>
+
+  <!-- Slide 9: Tips 3 -->
+  <div class="slide" data-index="9">
+    <div class="slide-content">
+      <h2>使用技巧（三）—— 高级玩法</h2>
+      <p class="section-subtitle">进阶技巧，释放 Claude Code 的全部潜力</p>
+
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-title"><span class="dot purple"></span>子代理并行</div>
+          <p>Claude Code 可以自动派生子代理并行处理独立任务。在 Superpowers 的 subagent-driven-development 技能中开箱即用。</p>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="dot green"></span>Worktree 隔离</div>
+          <p>使用 <code>EnterWorktree</code> 在隔离的 Git 工作树中进行实验性修改，不影响主工作区。Superpowers 会强制使用此模式。</p>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="dot blue"></span>循环任务</div>
+          <p>使用 <code>/loop</code> 命令设置定时执行的提示词。适合轮询 CI 状态、定期检查部署等场景。</p>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="dot orange"></span>TDD 工作流</div>
+          <p>Superpowers 的 TDD 技能强制执行 RED→GREEN→REFACTOR 循环，确保每个改动都有测试覆盖。</p>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="dot pink"></span>MCP 扩展</div>
+          <p>通过 Model Context Protocol 连接外部工具和 API。ECC 内置了 6 个 MCP 服务器配置。</p>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="dot yellow"></span>一键 PR</div>
+          <p>在 Claude Code 中直接使用 <code>gh pr create</code> 创建 PR，Claude 会自动生成标题和描述。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Slide 10: Config -->
+  <div class="slide" data-index="10">
+    <div class="slide-content">
+      <h2>配置管理</h2>
+      <p class="section-subtitle">理解 settings.json 的层级和关键配置项</p>
+
+      <div class="two-col">
+        <div>
+          <h3>配置层级（优先级从高到低）</h3>
+          <ul class="bullet-list">
+            <li><strong>项目级</strong> — <code>.claude/settings.json</code></li>
+            <li><strong>项目级本地</strong> — <code>.claude/settings.local.json</code></li>
+            <li><strong>用户级</strong> — <code>~/.claude/settings.json</code></li>
+          </ul>
+
+          <h3 style="margin-top: 20px;">关键配置项</h3>
+          <ul class="bullet-list">
+            <li><strong>env</strong> — 环境变量（模型、API Key 等）</li>
+            <li><strong>hooks</strong> — 钩子配置</li>
+            <li><strong>enabledPlugins</strong> — 启用的插件</li>
+            <li><strong>extraKnownMarketplaces</strong> — 自定义市场</li>
+            <li><strong>verbose</strong> — 详细输出模式</li>
+            <li><strong>includeCoAuthoredBy</strong> — Git Co-Author</li>
+          </ul>
+        </div>
+        <div>
+          <h3>权限管理</h3>
+          <p style="color: var(--text-secondary); line-height: 1.7; margin-bottom: 16px;">
+            通过权限系统控制 Claude 可以执行的操作类型：
+          </p>
+          <ul class="bullet-list">
+            <li><strong>Allow</strong> — 始终允许的操作</li>
+            <li><strong>Ask</strong> — 每次询问确认</li>
+            <li><strong>Deny</strong> — 完全禁止</li>
+          </ul>
+          <div class="code-block"><span class="comment"># 允许所有 npm 命令</span>
+<span class="cmd">/permit</span> <span class="arg">npm</span>
+
+<span class="comment"># 查看当前权限</span>
+<span class="cmd">/status</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Slide 11: Shortcuts -->
+  <div class="slide" data-index="11">
+    <div class="slide-content">
+      <h2>键盘快捷键</h2>
+      <p class="section-subtitle">提高操作效率的常用快捷键</p>
+
+      <table class="cmd-table">
+        <tr><th>快捷键</th><th>功能</th></tr>
+        <tr><td><kbd>Ctrl + C</kbd></td><td>中断当前操作 / 取消生成</td></tr>
+        <tr><td><kbd>Ctrl + D</kbd></td><td>退出 Claude Code 会话</td></tr>
+        <tr><td><kbd>Ctrl + L</kbd></td><td>清屏（等同于 <code>/clear</code>）</td></tr>
+        <tr><td><kbd>Ctrl + R</kbd></td><td>搜索对话历史</td></tr>
+        <tr><td><kbd>Ctrl + Enter</kbd></td><td>提交多行输入</td></tr>
+        <tr><td><kbd>Enter</kbd></td><td>提交单行输入</td></tr>
+        <tr><td><kbd>Shift + Enter</kbd></td><td>在输入框中换行</td></tr>
+        <tr><td><kbd>Esc</kbd></td><td>关闭弹窗 / 取消操作</td></tr>
+        <tr><td><kbd>↑ / ↓</kbd></td><td>浏览历史命令</td></tr>
+        <tr><td><kbd>Tab</kbd></td><td>自动补全文件路径</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- Slide 12: Workflow -->
+  <div class="slide" data-index="12">
+    <div class="slide-content">
+      <h2>推荐工作流</h2>
+      <p class="section-subtitle">经过验证的高效开发流程</p>
+
+      <div style="display: flex; gap: 20px; align-items: stretch; flex-wrap: wrap;">
+        <div class="card" style="flex: 1; min-width: 200px; text-align: center;">
+          <div style="font-size: 2rem; margin-bottom: 10px;">1</div>
+          <div class="card-title" style="justify-content: center;">设计方案</div>
+          <p>使用 <code>/plan</code> 或 Superpowers brainstorming 明确需求和方案。</p>
+        </div>
+        <div style="display: flex; align-items: center; color: var(--accent); font-size: 1.5rem;">→</div>
+        <div class="card" style="flex: 1; min-width: 200px; text-align: center;">
+          <div style="font-size: 2rem; margin-bottom: 10px;">2</div>
+          <div class="card-title" style="justify-content: center;">隔离开发</div>
+          <p>使用 Git Worktree 在隔离环境中进行修改，不影响主分支。</p>
+        </div>
+        <div style="display: flex; align-items: center; color: var(--accent); font-size: 1.5rem;">→</div>
+        <div class="card" style="flex: 1; min-width: 200px; text-align: center;">
+          <div style="font-size: 2rem; margin-bottom: 10px;">3</div>
+          <div class="card-title" style="justify-content: center;">TDD 开发</div>
+          <p>先写测试 → 实现代码 → 重构优化，每步都有验证。</p>
+        </div>
+        <div style="display: flex; align-items: center; color: var(--accent); font-size: 1.5rem;">→</div>
+        <div class="card" style="flex: 1; min-width: 200px; text-align: center;">
+          <div style="font-size: 2rem; margin-bottom: 10px;">4</div>
+          <div class="card-title" style="justify-content: center;">代码审查</div>
+          <p>使用 <code>/review</code> 或 <code>/security-review</code> 检查改动。</p>
+        </div>
+        <div style="display: flex; align-items: center; color: var(--accent); font-size: 1.5rem;">→</div>
+        <div class="card" style="flex: 1; min-width: 200px; text-align: center;">
+          <div style="font-size: 2rem; margin-bottom: 10px;">5</div>
+          <div class="card-title" style="justify-content: center;">提交合并</div>
+          <p>Claude 自动生成 commit message，创建 PR 并完成合并。</p>
+        </div>
+      </div>
+
+      <div class="tip-box" style="margin-top: 24px;">
+        <strong>Superpowers 自动化：</strong>安装 Superpowers 后，上述流程由 using-superpowers 技能强制执行。Agent 会自动调用 brainstorming → writing-plans → executing-plans → code-review → finishing 流程。
+      </div>
+    </div>
+  </div>
+
+  <!-- Slide 13: Summary -->
+  <div class="slide" data-index="13">
+    <div class="slide-content title-slide">
+      <h1 style="font-size: 2.4rem;">开始高效编码</h1>
+      <p class="subtitle">记住一句话：先装技能，再写代码</p>
+
+      <div style="text-align: left; max-width: 600px; margin: 30px auto;">
+        <div class="code-block"><span class="comment">1. 初始化项目</span>
+<span class="cmd">/init</span>
+
+<span class="comment">2. 安装核心技能</span>
+<span class="cmd">npx skills add</span> <span class="arg">vercel-labs/skills --skill find-skills -g -y</span>
+
+<span class="comment">3. 安装 Superpowers 插件</span>
+<span class="cmd">/plugin install</span> <span class="arg">superpowers@claude-plugins-official</span>
+
+<span class="comment">4. 开始工作！</span>
+<span class="cmd">/plan</span> <span class="arg">描述你的任务...</span></div>
+      </div>
+
+      <p style="color: var(--text-secondary); margin-top: 30px; font-size: 0.9rem;">
+        更多信息请访问 <span style="color: var(--blue);">docs.anthropic.com/claude-code</span> 和 <span style="color: var(--blue);">skills.sh</span>
+      </p>
+    </div>
+  </div>
+
+</div>
+
+<!-- Navigation -->
+<div class="nav-bar">
+  <div class="progress" id="progressBar"></div>
+  <button id="btnPrev" onclick="goTo(currentSlide - 1)">← 上一页</button>
+  <span class="page-indicator" id="pageIndicator">1 / 14</span>
+  <button id="btnNext" onclick="goTo(currentSlide + 1)">下一页 →</button>
+</div>
+
+<script>
+let currentSlide = 0;
+const totalSlides = document.querySelectorAll('.slide').length;
+
+function goTo(index) {
+  if (index < 0 || index >= totalSlides) return;
+
+  const slides = document.querySelectorAll('.slide');
+  slides.forEach((s, i) => {
+    s.classList.remove('active', 'prev');
+    if (i < index) s.classList.add('prev');
+  });
+
+  slides[index].classList.add('active');
+  currentSlide = index;
+
+  // Update UI
+  document.getElementById('pageIndicator').textContent = `${index + 1} / ${totalSlides}`;
+  document.getElementById('progressBar').style.width = `${((index + 1) / totalSlides) * 100}%`;
+  document.getElementById('btnPrev').disabled = index === 0;
+  document.getElementById('btnNext').disabled = index === totalSlides - 1;
+}
+
+// Keyboard navigation
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') {
+    e.preventDefault();
+    goTo(currentSlide + 1);
+  } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+    e.preventDefault();
+    goTo(currentSlide - 1);
+  } else if (e.key === 'Home') {
+    e.preventDefault();
+    goTo(0);
+  } else if (e.key === 'End') {
+    e.preventDefault();
+    goTo(totalSlides - 1);
+  }
+});
+
+// Touch support
+let touchStartX = 0;
+document.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; });
+document.addEventListener('touchend', (e) => {
+  const diff = touchStartX - e.changedTouches[0].clientX;
+  if (Math.abs(diff) > 60) {
+    goTo(currentSlide + (diff > 0 ? 1 : -1));
+  }
+});
+
+// Mouse wheel
+let wheelTimeout;
+document.addEventListener('wheel', (e) => {
+  if (wheelTimeout) return;
+  wheelTimeout = setTimeout(() => { wheelTimeout = null; }, 800);
+  goTo(currentSlide + (e.deltaY > 0 ? 1 : -1));
+}, { passive: true });
+
+// Init
+goTo(0);
+</script>
+
+</body>
+</html>
